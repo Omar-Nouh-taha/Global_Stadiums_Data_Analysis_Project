@@ -1,0 +1,9 @@
+{
+	"name": "omarrADF",
+	"location": "qatarcentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "61ee522d-4bc5-4dad-8706-b83604467c95",
+		"tenantId": "0bc92751-071a-4e2c-a48b-633206fef374"
+	}
+}

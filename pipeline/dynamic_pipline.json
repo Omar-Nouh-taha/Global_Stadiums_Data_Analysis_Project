@@ -1,0 +1,161 @@
+{
+	"name": "dynamic_pipline",
+	"properties": {
+		"activities": [
+			{
+				"name": "get list of table to be processed",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT \n    QUOTENAME(t.name) AS tableName, \n    QUOTENAME(SCHEMA_NAME(t.schema_id)) AS schemaName \nFROM \n    sys.tables as t",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "Genaric_AzureSql_DS",
+						"type": "DatasetReference",
+						"parameters": {
+							"servername": {
+								"value": "@pipeline().parameters.servername",
+								"type": "Expression"
+							},
+							"databasename": {
+								"value": "@pipeline().parameters.databasename",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "iterate over all tables",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "get list of table to be processed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('get list of table to be processed').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "copy data drom table",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('SELECT * FROM ', item().schemaName, '.', item().tableName)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Genaric_AzureSql_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"servername": {
+											"value": "@pipeline().parameters.servername",
+											"type": "Expression"
+										},
+										"databasename": {
+											"value": "@pipeline().parameters.databasename",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Genaric_ADLSDB_DS",
+									"type": "DatasetReference",
+									"parameters": {
+										"servername": {
+											"value": "@pipeline().parameters.servername",
+											"type": "Expression"
+										},
+										"databasename": {
+											"value": "@pipeline().parameters.databasename",
+											"type": "Expression"
+										},
+										"schemaname": {
+											"value": "@item().schemaName",
+											"type": "Expression"
+										},
+										"tablename": {
+											"value": "@item().tableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"servername": {
+				"type": "string",
+				"defaultValue": "omarsqlser.database.windows.net"
+			},
+			"databasename": {
+				"type": "string",
+				"defaultValue": "AdeventureWorkss"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-04-06T18:29:55Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

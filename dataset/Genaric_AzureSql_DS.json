@@ -1,0 +1,31 @@
+{
+	"name": "Genaric_AzureSql_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Genaric_AzureSql_LS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"servername": {
+					"value": "@dataset().servername",
+					"type": "Expression"
+				},
+				"databasename": {
+					"value": "@dataset().databasename",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"servername": {
+				"type": "string"
+			},
+			"databasename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
